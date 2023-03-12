@@ -1,0 +1,352 @@
+        -:    0:Source:gitm.c
+        -:    0:Graph:testing-gitm.gcno
+        -:    0:Data:testing-gitm.gcda
+        -:    0:Runs:12
+        -:    0:Source is newer than graph
+        -:    1:// name: Minh Long Duong
+        -:    2:// unikey: mduo2085
+        -:    3:// SID: 520077702
+        -:    4:
+        -:    5:// code here
+        -:    6:#include <stdio.h>
+        -:    7:#include <stdlib.h>
+        -:    8:#include <string.h>
+        -:    9:#include <stdbool.h>
+        -:   10:#include <math.h>
+        -:   11:#include <ctype.h>
+        -:   12:
+        -:   13:char playBoard[19][19];
+        -:   14:char turnPlayer = 'B';
+        -:   15:char winner = 'n';
+        -:   16:int holeX = 10;
+        -:   17:int holeY = 10;
+        -:   18:char history[1000] = ""; // length 1000 because after calculation, the max history length would be about 912
+        -:   19:int count = 0;
+      439:   20:void trim(char *str)
+        -:   21:{
+        -:   22:    int x, i;
+        -:   23:    x = 0;
+        -:   24:    i = 0;
+     4589:   25:    while (str[i] != '\0')
+        -:   26:    {
+     4150:   27:        if (str[i] != ' ' && str[i] != '\n')
+        -:   28:        {
+        -:   29:            x = i;
+        -:   30:        }
+     4150:   31:        i++;
+        -:   32:    }
+      439:   33:    str[x + 1] = '\0';
+      439:   34:}
+       12:   35:void initBoard()
+        -:   36:{
+      240:   37:    for (int i = 0; i < 19; i++)
+        -:   38:    {
+     4560:   39:        for (int j = 0; j < 19; j++)
+        -:   40:        {
+     4332:   41:            playBoard[i][j] = '.';
+        -:   42:        }
+        -:   43:    }
+       12:   44:}
+      435:   45:void changeHole(int x, int y)
+        -:   46:{
+      435:   47:    x = x + 1;
+      435:   48:    y = y + 1;
+      435:   49:    holeY = 1 + (((5 * (x * x)) + (3 * x) + 4) % 19);
+      435:   50:    holeX = abs(1 + (((4 * (y * y)) + (2 * y) - 4) % 19)); // since index starts at 0 and the formula starts at 1
+        -:   51:    // coordinates are inverted
+      435:   52:}
+    #####:   53:void placeBlack(int x, int y)
+        -:   54:{
+     221*:   55:    changeHole(x, y);
+     221*:   56:    playBoard[x][y] = '#';
+    #####:   57:}
+    #####:   58:void placeWhite(int x, int y)
+        -:   59:{
+     214*:   60:    changeHole(x, y);
+     214*:   61:    playBoard[x][y] = 'o';
+    #####:   62:}
+      443:   63:void readMove(char str[])
+        -:   64:{
+      443:   65:    if (isspace(str[strlen(str) - 2]) || (isspace(str[5]) && isspace(str[6])) || strlen(str) < 8)
+        -:   66:    {
+        -:   67:        printf("Invalid!\n");
+        4:   68:        return;
+        -:   69:    }
+      439:   70:    trim(str);
+        -:   71:    // check 2 digit coordinate
+      439:   72:    if (strlen(str) == 9)
+        -:   73:    {
+      201:   74:        char coor[4] = {str[7], str[8], '\0'};
+        -:   75:        int x = atoi(coor);
+      201:   76:        if (x < 10)
+        -:   77:        {
+        -:   78:            printf("Invalid coordinate\n");
+       1*:   79:            return;
+        -:   80:        }
+        -:   81:        // check coordinate validity
+      201:   82:        if (x < 1 || x > 19 || str[6] < 65 || str[6] > 83 || strlen(str) != 9)
+        -:   83:        {
+        -:   84:            printf("Invalid coordinate\n");
+        1:   85:            return;
+        -:   86:        }
+      200:   87:        if (playBoard[x - 1][str[6] - 65] == '#' || playBoard[x - 1][str[6] - 65] == 'o')
+        -:   88:        {
+        -:   89:            printf("Occupied coordinate\n");
+    #####:   90:            return;
+        -:   91:        }
+      200:   92:        if (turnPlayer == 'B')
+        -:   93:        {
+        -:   94:            placeBlack(x - 1, str[6] - 65);
+       95:   95:            turnPlayer = 'W';
+        -:   96:        }
+        -:   97:        else
+        -:   98:        {
+        -:   99:            placeWhite(x - 1, str[6] - 65);
+      105:  100:            turnPlayer = 'B';
+        -:  101:        }
+      200:  102:        char move[4] = {str[6], str[7], str[8]};
+        -:  103:        strcat(history, move);
+        -:  104:    }
+        -:  105:    else
+        -:  106:    // check 1 digit coordinate
+        -:  107:    {
+      238:  108:        if (str[7] < 49 || str[7] > 57 || str[6] < 65 || str[6] > 83 || strlen(str) != 8)
+        -:  109:        {
+        -:  110:            printf("Invalid coordinate\n");
+        3:  111:            return;
+        -:  112:        }
+      237:  113:        if (playBoard[str[7] - '0' - 1][str[6] - 65] == '#' || playBoard[str[7] - '0' - 1][str[6] - 65] == 'o')
+        -:  114:        {
+        -:  115:            printf("Occupied coordinate\n");
+        2:  116:            return;
+        -:  117:        }
+      235:  118:        if (turnPlayer == 'B')
+        -:  119:        {
+        -:  120:            placeBlack(str[7] - '0' - 1, str[6] - 65);
+      126:  121:            turnPlayer = 'W';
+        -:  122:        }
+        -:  123:        else
+        -:  124:        {
+        -:  125:            placeWhite(str[7] - '0' - 1, str[6] - 65);
+      109:  126:            turnPlayer = 'B';
+        -:  127:        }
+      235:  128:        char move[3] = {str[6], str[7]};
+        -:  129:        strcat(history, move);
+        -:  130:    }
+        -:  131:    //-65 to convert from ASCII to in; -1 to make the first index 0
+        -:  132:}
+        -:  133:
+        1:  134:void viewHole()
+        -:  135:{
+        1:  136:    char charHoleX = holeY + 64;
+        -:  137:    char charHoleY[10];
+        1:  138:    if (holeY < 9)
+        -:  139:    {
+        1:  140:        int holeYInt = holeX;
+        -:  141:        sprintf(charHoleY, "%d", holeYInt);
+        -:  142:    }
+        -:  143:    else
+        -:  144:    {
+    #####:  145:        int holeYInt = holeX;
+        -:  146:        sprintf(charHoleY, "%d", holeYInt);
+        -:  147:    }
+        1:  148:    int radX = charHoleX - 64 - 1;
+        -:  149:    int radY = atoi(charHoleY) - 1;
+        -:  150:    printf("%c%s,", charHoleX, charHoleY);
+        8:  151:    for (int x = radY + 3; x >= radY - 3; x--) // since we added 1 before
+        -:  152:    {
+       56:  153:        for (int y = radX - 3; y <= radX + 3; y++)
+        -:  154:        {
+       49:  155:            if ((x < 0 || x > 18) || y < 0 || y > 18)
+        -:  156:            {
+        -:  157:                printf("x");
+        -:  158:            }
+        -:  159:            else
+        -:  160:            {
+       24:  161:                printf("%c", playBoard[x][y]);
+        -:  162:            }
+        -:  163:        }
+        -:  164:    }
+        -:  165:    printf("\n");
+        1:  166:}
+        8:  167:void endGame()
+        -:  168:{
+        8:  169:    if (winner == 'W')
+        -:  170:    {
+        -:  171:        printf("White wins!\n");
+        -:  172:    }
+        7:  173:    else if (winner == 'B')
+        -:  174:    {
+        -:  175:        printf("Black wins!\n");
+        -:  176:    }
+        -:  177:    else
+        -:  178:    {
+        -:  179:        printf("Wow, a tie!\n");
+        -:  180:    }
+        -:  181:    strcat(history, "\n");
+        -:  182:    printf("%s", history);
+        -:  183:    printf("Thank you for playing!\n");
+        8:  184:    exit(0);
+        -:  185:}
+   234521:  186:void checkWinPlayer(char sign)
+        -:  187:{
+   234521:  188:    if (sign == 'o')
+        -:  189:    {
+        1:  190:        winner = 'W';
+        1:  191:        endGame();
+        -:  192:    }
+   234520:  193:    else if (sign == '#')
+        -:  194:    {
+        6:  195:        winner = 'B';
+        6:  196:        endGame();
+        -:  197:    }
+   234514:  198:}
+      447:  199:void checkWin()
+        -:  200:{
+        -:  201:    // check tie
+      447:  202:    if (count == 19 * 19)
+        -:  203:    {
+        1:  204:        winner = 'n';
+        1:  205:        endGame();
+        -:  206:    }
+        -:  207:    // check horizontal
+     8863:  208:    for (int i = 0; i < 19; i++)
+        -:  209:    {
+   134675:  210:        for (int j = 0; j < 15; j++)
+        -:  211:        {
+   126258:  212:            if (playBoard[i][j] == playBoard[i][j + 1] && playBoard[i][j + 1] == playBoard[i][j + 2] && playBoard[i][j + 2] == playBoard[i][j + 3] && playBoard[i][j + 3] == playBoard[i][j + 4])
+        -:  213:            {
+    72227:  214:                checkWinPlayer(playBoard[i][j]);
+        -:  215:            }
+        -:  216:        }
+        -:  217:    }
+        -:  218:    // check vertical
+     7058:  219:    for (int i = 0; i < 15; i++)
+        -:  220:    {
+   132303:  221:        for (int j = 0; j < 19; j++)
+        -:  222:        {
+        -:  223:            {
+   125688:  224:                if (playBoard[i][j] == playBoard[i + 1][j] && playBoard[i + 1][j] == playBoard[i + 2][j] && playBoard[i + 2][j] == playBoard[i + 3][j] && playBoard[i + 3][j] == playBoard[i + 4][j])
+        -:  225:                {
+    63472:  226:                    checkWinPlayer(playBoard[i][j]);
+        -:  227:                }
+        -:  228:            }
+        -:  229:        }
+        -:  230:    }
+        -:  231:    // check diagonal
+     7026:  232:    for (int i = 0; i < 15; i++)
+        -:  233:    {
+   105362:  234:        for (int j = 0; j < 15; j++)
+        -:  235:        {
+    98777:  236:            if ((playBoard[i][j] == playBoard[i + 1][j + 1] && playBoard[i + 1][j + 1] == playBoard[i + 2][j + 2] && playBoard[i + 2][j + 2] == playBoard[i + 3][j + 3] && playBoard[i + 3][j + 3] == playBoard[i + 4][j + 4]))
+        -:  237:            {
+    47873:  238:                checkWinPlayer(playBoard[i][j]);
+        -:  239:            }
+        -:  240:        }
+        -:  241:    }
+     7024:  242:    for (int i = 0; i < 15; i++)
+        -:  243:    {
+   105360:  244:        for (int j = 4; j < 19; j++)
+        -:  245:        {
+    98775:  246:            if ((playBoard[i][j] == playBoard[i + 1][j - 1] && playBoard[i + 1][j - 1] == playBoard[i + 2][j - 2] && playBoard[i + 2][j - 2] == playBoard[i + 3][j - 3] && playBoard[i + 3][j - 3] == playBoard[i + 4][j - 4]))
+        -:  247:            {
+    50949:  248:                checkWinPlayer(playBoard[i][j]);
+        -:  249:            }
+        -:  250:        }
+        -:  251:    }
+      439:  252:}
+        -:  253:
+       12:  254:int main()
+        -:  255:{
+       12:  256:    initBoard();
+       12:  257:    char str[50] = " ";
+      458:  258:    while (fgets(str, 50, stdin) != NULL)
+        -:  259:    {
+        -:  260:        // check length validity
+      458:  261:        if (strlen(str) > 40)
+        -:  262:        {
+        -:  263:            int c;
+        -:  264:            int spaceCount = 0;
+      350:  265:            for (int index = 0; index < strlen(str); index++)
+        -:  266:            {
+      343:  267:                if (isspace(str[index]))
+        -:  268:                {
+        8:  269:                    spaceCount += 1;
+        -:  270:                }
+        -:  271:            }
+     1483:  272:            while((c = getchar()) != EOF){
+     1483:  273:                if(c == ' '){
+        4:  274:                    spaceCount+=1;
+        -:  275:                }
+     1483:  276:                if(c == '\n' || c == '\0' || c == EOF){
+        -:  277:                    break;
+        -:  278:                }
+        -:  279:            }
+        7:  280:            if (spaceCount >1)
+        -:  281:            {
+        -:  282:                printf("Invalid!\n");
+        4:  283:                continue;
+        -:  284:            }
+       3*:  285:            else if (((!isspace(str[8]) || !isspace(str[7])) && spaceCount != 1))
+        -:  286:            {
+        -:  287:                printf("Invalid!\n");
+    #####:  288:                continue;
+        -:  289:            }
+        -:  290:            else
+        -:  291:            {
+        -:  292:                printf("Invalid coordinate\n");
+        3:  293:                continue;
+        -:  294:            }
+        -:  295:            while ((c = getchar()) != '\n')
+        -:  296:            {
+        -:  297:                // Discard the extra characters
+        -:  298:            }
+        -:  299:        }
+      451:  300:        else if (str[0] == 'p' && str[1] == 'l' && str[2] == 'a' && str[3] == 'c' && str[4] == 'e' && isspace(str[5]))
+        -:  301:        {
+      443:  302:            if (turnPlayer == 'W')
+        -:  303:            {
+      216:  304:                readMove(str);
+      216:  305:                count += 1;
+        -:  306:            }
+        -:  307:            else
+        -:  308:            {
+      227:  309:                readMove(str);
+      227:  310:                count += 1;
+        -:  311:            }
+        -:  312:        }
+        8:  313:        else if (str[0] == 'v' && str[1] == 'i' && str[2] == 'e' && str[3] == 'w' && strlen(str) == 5)
+        -:  314:        {
+        1:  315:            viewHole();
+        -:  316:        }
+        7:  317:        else if (str[0] == 'w' && str[1] == 'h' && str[2] == 'o' && strlen(str) == 4)
+        -:  318:        {
+        1:  319:            printf("%c\n", turnPlayer);
+        -:  320:        }
+        6:  321:        else if (str[0] == 't' && str[1] == 'e' && str[2] == 'r' && str[3] == 'm' && strlen(str) <= 6 && str[4] != ' ')
+        -:  322:        {
+        -:  323:
+        4:  324:            exit(1);
+        -:  325:        }
+        2:  326:        else if ((str[0] = 'h') && str[1] == 'i' && str[2] == 's' && str[3] == 't' && str[4] == 'o' && str[5] == 'r' && str[6] == 'y' && strlen(str) == 8)
+        -:  327:        {
+        -:  328:            printf("%s\n", history);
+        -:  329:        }
+       1*:  330:        else if ((str[0] = 'r') && str[1] == 'e' && str[2] == 's' && str[3] == 'i' && str[4] == 'g' && str[5] == 'n' && strlen(str) <= 8 && str[6] != ' ')
+        -:  331:        {
+        -:  332:
+    #####:  333:            if (turnPlayer == 'W')
+    #####:  334:                winner = 'B';
+        -:  335:            else
+    #####:  336:                winner = 'W';
+    #####:  337:            endGame();
+        -:  338:        }
+        -:  339:        else
+        -:  340:        {
+        -:  341:            printf("Invalid!\n");
+        -:  342:        }
+      447:  343:        str[0] = '\0';
+      447:  344:        checkWin();
+        -:  345:    };
+        -:  346:    return 0;
+        -:  347:}
